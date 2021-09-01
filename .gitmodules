@@ -1,3 +1,4 @@
 [submodule "external/haven"]
 	path = external/haven
 	url = https://github.com/haven-protocol-org/haven-main.git
+	branch = refactoring
