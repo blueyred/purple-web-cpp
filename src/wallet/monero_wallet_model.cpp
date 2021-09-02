@@ -1145,7 +1145,12 @@ namespace monero {
     // set num values
     rapidjson::Value value_num(rapidjson::kNumberType);
     if (m_priority != boost::none) monero_utils::addJsonMember("priority", m_priority.get(), allocator, root, value_num);
-    if (m_priority != boost::none) monero_utils::addJsonMember("txType", m_tx_type.get(), allocator, root, value_num);
+  //  if (m_priority != boost::none) monero_utils::addJsonMember("txType", m_tx_type.get(), allocator, root, value_num);
+    if(m_tx_type != boost::none){
+      uint8_t tx_type_int = static_cast<uint8_t>( m_tx_type.get() );
+      monero_utils::addJsonMember("txType", tx_type_int, allocator, root, value_num);
+    }
+
     if (m_ring_size != boost::none) monero_utils::addJsonMember("ringSize", m_ring_size.get(), allocator, root, value_num);
     if (m_account_index != boost::none) monero_utils::addJsonMember("accountIndex", m_account_index.get(), allocator, root, value_num);
     if (m_unlock_height != boost::none) monero_utils::addJsonMember("unlockHeight", m_unlock_height.get(), allocator, root, value_num);
@@ -1204,9 +1209,9 @@ namespace monero {
       }
       else if (key == std::string("txType")) {
         uint32_t tx_type_num = it->second.get_value<uint32_t>();
-        if (tx_type_num == 0) config->m_tx_type = haven_tx_type::TRANSFER;
-        else if (tx_type_num == 1) config->m_tx_type = haven_tx_type::EXCHANGE_FROM_USD;
-        else if (tx_type_num == 2) config->m_tx_type = haven_tx_type::EXCHANGE_TO_USD;
+        if (tx_type_num == 0) config->m_tx_type = cryptonote::transaction_type::TRANSFER;
+        else if (tx_type_num == 1) config->m_tx_type = cryptonote::transaction_type::ONSHORE;
+        else if (tx_type_num == 2) config->m_tx_type = cryptonote::transaction_type::OFFSHORE;
         else throw std::runtime_error("Invalid tx_type number: " + std::to_string(tx_type_num));
       }
       else if (key == std::string("ringSize")) config->m_ring_size = it->second.get_value<uint32_t>();

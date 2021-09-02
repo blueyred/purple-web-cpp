@@ -53,6 +53,7 @@
 #pragma once
 
 #include "daemon/monero_daemon_model.h"
+#include "cryptonote_protocol/enums.h"
 
 using namespace monero;
 
@@ -342,12 +343,13 @@ namespace monero {
   /**
    * Enumerates Haven Tx Types.
    */
-  enum haven_tx_type : uint8_t {
-    TRANSFER=0,
-    EXCHANGE_FROM_USD,
-    EXCHANGE_TO_USD,
-  };
-
+/*
+//  enum haven_tx_type : uint8_t {
+//    TRANSFER=0,
+//    EXCHANGE_FROM_USD,
+//    EXCHANGE_TO_USD,
+//  };
+*/
   /**
    * Configures a transaction to send, sweep, or create a payment URI.
    */
@@ -370,8 +372,8 @@ namespace monero {
     boost::optional<uint64_t> m_below_amount;
     boost::optional<bool> m_sweep_each_subaddress;
     boost::optional<std::string> m_key_image;
-    boost::optional<haven_tx_type> m_tx_type;
-    monero_tx_config() {}
+    boost::optional<cryptonote::transaction_type> m_tx_type;
+     monero_tx_config() {}
     monero_tx_config(const monero_tx_config& config);
     monero_tx_config copy() const;
     rapidjson::Value to_rapidjson_val(rapidjson::Document::AllocatorType& allocator) const;

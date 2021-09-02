@@ -58,6 +58,7 @@
 #include "serialization/binary_utils.h"
 #include "serialization/string.h"
 #include "utils/monero_utils.h"
+#include "cryptonote_protocol/enums.h"
 #include "wallet/wallet_rpc_server_commands_defs.h"
 #include <chrono>
 #include <iostream>
@@ -68,7 +69,7 @@
 #endif
 
 using namespace tools;
-
+using namespace cryptonote;
 /**
  * Implements a monero_wallet.h by wrapping wallet2.h.
  */
@@ -1892,7 +1893,8 @@ std::vector<std::shared_ptr<monero_tx_wallet>> monero_wallet_core::create_txs(co
     // validate tx_type
     if (config.m_tx_type == boost::none)
         throw std::runtime_error("Must specify tx type");
-    uint32_t tx_type = config.m_tx_type.get();
+    //uint32_t tx_type = config.m_tx_type.get();
+    cryptonote::transaction_type tx_type = config.m_tx_type.get();
 
     if (config.m_currency == boost::none)
         throw std::runtime_error("Must specify currency");   
@@ -1934,9 +1936,9 @@ std::vector<std::shared_ptr<monero_tx_wallet>> monero_wallet_core::create_txs(co
     std::string str_destination;
 
     // don't add extra data and special unlock times when normal transfer via xhv
-    if (currency != "XHV" && tx_type != TRANSFER) {
+    if (currency != "XHV" && tx_type != transaction_type::TRANSFER) {
 
-        if (tx_type == TRANSFER) {
+        if (tx_type == transaction_type::TRANSFER) {
 
             str_source = currency;
             str_destination = currency;
@@ -1947,7 +1949,7 @@ std::vector<std::shared_ptr<monero_tx_wallet>> monero_wallet_core::create_txs(co
                 throw std::runtime_error("cannot exchange xUSD to xUSD, please use transfer");
             }
 
-            if (tx_type == EXCHANGE_FROM_USD) {
+            if (tx_type == transaction_type::ONSHORE) {
 
                 str_source = "XUSD";
                 str_destination = currency;
@@ -1961,7 +1963,7 @@ std::vector<std::shared_ptr<monero_tx_wallet>> monero_wallet_core::create_txs(co
 
         std::string err;
         // adjust unlock time for offshore/onshore tx
-        if (tx_type != TRANSFER && currency == "XHV") {
+        if (tx_type != transaction_type::TRANSFER && currency == "XHV") {
             // increment priority -> for onshore/offhore we use a priority range from 1-4, but for default 0-3
             // therefore we increment here when its onshore/offshore
             priority++;
@@ -1976,7 +1978,7 @@ std::vector<std::shared_ptr<monero_tx_wallet>> monero_wallet_core::create_txs(co
             }
         } else {
             // xassets conversions
-            if (tx_type != TRANSFER) {
+            if (tx_type != transaction_type::TRANSFER) {
                 unlock_time = 1440 + m_w2->get_daemon_blockchain_height(err);
             } else {
             // any transfers
@@ -1985,7 +1987,7 @@ std::vector<std::shared_ptr<monero_tx_wallet>> monero_wallet_core::create_txs(co
         }
 
         // adjust priority for xassets transfers
-        if (tx_type == TRANSFER && currency != "XHV" && currency != "XUSD") {
+        if (tx_type == transaction_type::TRANSFER && currency != "XHV" && currency != "XUSD") {
 
             // Reducing priority to 1 - xAsset transfers do not permit other priorities
             if (priority > 1) {
@@ -2071,12 +2073,12 @@ std::vector<std::shared_ptr<monero_tx_wallet>> monero_wallet_core::create_txs(co
         out_transfer->m_currency = str_source;
 
         // for exchanges create incoming tx ( even if not send to yourself, to extract counter value later)
-        if (tx_type == EXCHANGE_FROM_USD || tx_type == EXCHANGE_TO_USD) {
+        if (tx_type == transaction_type::ONSHORE || tx_type == transaction_type::OFFSHORE ) {
 
             std::shared_ptr<monero_incoming_transfer> incoming_transfer = std::make_shared<monero_incoming_transfer>();
             incoming_transfer->m_tx = tx;
             tx->m_incoming_transfers.push_back(incoming_transfer);
-            incoming_transfer->m_amount = (tx_type == EXCHANGE_TO_USD) ? *tx_amounts_usd_iter : (str_destination == "XHV") ? *tx_amounts_iter : *tx_amounts_xasset_iter;
+            incoming_transfer->m_amount = (tx_type == transaction_type::OFFSHORE) ? *tx_amounts_usd_iter : (str_destination == "XHV") ? *tx_amounts_iter : *tx_amounts_xasset_iter;
             incoming_transfer->m_currency = str_destination;
         }
 
@@ -2214,7 +2216,7 @@ std::vector<std::shared_ptr<monero_tx_wallet>> monero_wallet_core::sweep_account
     // validate tx_type
     if (config.m_tx_type == boost::none)
         throw std::runtime_error("Must specify tx type");
-    uint32_t tx_type = config.m_tx_type.get();
+    cryptonote::transaction_type tx_type = config.m_tx_type.get();
 
     if (config.m_currency == boost::none)
         throw std::runtime_error("Must specify currency");
